@@ -4,11 +4,12 @@ import React, { FC, ReactNode, useEffect, useLayoutEffect } from "react"
 
 interface Props {
     children?: ReactNode;
-    chainId: string;
+    // chainId: string; // Remove dynamic chainId
 }
 
 const Providers: FC<Props> = (props) => {
-    const { children, chainId } = props;
+    const { children } = props;
+    const chainId = "elgafar-1"; // Hardcode to Andromeda testnet
     const isConnected = useAndromedaStore(state => state.isConnected)
     const isLoading = useAndromedaStore(state => state.isLoading)
     const keplr = useAndromedaStore(state => state.keplr)
@@ -34,4 +35,4 @@ const Providers: FC<Props> = (props) => {
     )
 }
 
-export default Providers
+export default Providers;

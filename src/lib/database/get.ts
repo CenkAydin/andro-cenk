@@ -1,28 +1,19 @@
 import { cache } from 'react'
-import { apolloClient } from '../graphql'
-import { IChainConfigQuery, refetchChainConfigQuery } from '@andromedaprotocol/gql/dist/__generated/react'
 import { CosmWasmClient } from '@cosmjs/cosmwasm-stargate';
-import { APP_ENV } from '@/appEnv';
-import { IAllKeysQuery, IAllKeysQueryResponse, IGetKeyQuery, IGetKeyQueryResponse, IKernelKeyQuery } from './types';
 import { IConfig } from '../app/types';
 
-export const getClient = cache(async (chainId: string) => {
-    const config = await apolloClient.query<IChainConfigQuery>(refetchChainConfigQuery({ identifier: chainId }));
-    const client = await CosmWasmClient.connect(config.data.chainConfigs.config.chainUrl);
+const ELGAFAR_RPC = 'https://rpc.elgafar.andromeda-testnet.io';
+const ELGAFAR_KERNEL = ''; // If you have a kernel address, put it here
+
+export const getClient = cache(async (_chainId: string) => {
+    // Always use the hardcoded Andromeda testnet RPC
+    const client = await CosmWasmClient.connect(ELGAFAR_RPC);
     return client;
 })
 
 export const getEmbeddableAddress = cache(async (client: CosmWasmClient) => {
-    const query: IKernelKeyQuery = {
-        "key_address": {
-            "key": "embeddables"
-        }
-    }
-    const chainId = await client.getChainId();
-    if (APP_ENV.OVERRIDE_DATABASE[chainId]) return APP_ENV.OVERRIDE_DATABASE[chainId];
-    const config = await apolloClient.query<IChainConfigQuery>(refetchChainConfigQuery({ identifier: chainId }));
-    const key: string = await client.queryContractSmart(config.data.chainConfigs.config.kernelAddress, query);
-    return key;
+    // If you have a hardcoded kernel address, return it here
+    return ELGAFAR_KERNEL;
 })
 
 export const getConfig = cache(async (client: CosmWasmClient, key: string) => {
