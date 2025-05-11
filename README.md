@@ -62,8 +62,8 @@ This NFT marketplace leverages the Andromeda Protocol to provide a seamless expe
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/andromeda-nft-marketplace.git
-   cd andromeda-nft-marketplace
+   git clone https://github.com/CenkAydin/andro-cenk.git
+   cd andro-cenk
    ```
 
 2. **Install Dependencies**
