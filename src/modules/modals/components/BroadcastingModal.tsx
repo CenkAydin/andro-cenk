@@ -1,4 +1,3 @@
-"use client";
 import { Text, Box, Center, Button } from "@chakra-ui/react";
 import { Check, ExternalLink } from "lucide-react";
 import { FC, memo, useCallback, useEffect, useMemo, useState } from "react";
@@ -66,7 +65,7 @@ const BroadcastingModal: FC<TransactionModalProps & OptionalProps> = memo(
     const TransactionInfo = useMemo(() => {
       if (!result) return <></>;
       const { transactionHash } = result as ExecuteResult | InstantiateResult;
-      // Only display the hash, do not attempt to fetch or query the transaction
+
       return (
         <Box
           sx={{
@@ -80,11 +79,19 @@ const BroadcastingModal: FC<TransactionModalProps & OptionalProps> = memo(
         >
           <Text sx={{ fontWeight: "bold" }}>Transaction #</Text>
           <Text mt="6px" style={{ color: "#7F56D9" }}>
-            {transactionHash ? (
-              <span>{truncate(transactionHash)}</span>
-            ) : (
-              <span>Broadcasted (hash unavailable)</span>
-            )}
+            <a
+              href={
+                chainConfig?.blockExplorerTxPages[0]?.replaceAll(
+                  "${txHash}",
+                  transactionHash
+                ) ?? ""
+              }
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              {truncate(transactionHash)}{" "}
+              <ExternalLink style={{ display: "inline-block" }} size="14px" />
+            </a>
           </Text>
         </Box>
       );

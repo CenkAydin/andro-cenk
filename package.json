@@ -21,13 +21,10 @@
     "@cosmjs/cosmwasm-stargate": "^0.32.3",
     "@cosmjs/proto-signing": "^0.32.3",
     "@cosmjs/stargate": "^0.32.3",
-    "@cosmos-kit/keplr": "^2.15.0",
-    "@cosmos-kit/react": "^2.22.0",
     "@emotion/react": "^11.11.1",
     "@emotion/styled": "^11.11.0",
     "@tanstack/react-query": "^5.60.6",
     "axios": "^1.5.1",
-    "chain-registry": "^1.69.210",
     "dayjs": "^1.11.6",
     "framer-motion": "^10.16.4",
     "graphql": "^16.6.0",
@@ -36,7 +33,6 @@
     "next": "^13.5.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "web3.storage": "^4.5.5",
     "zustand": "^4.4.1"
   },
   "devDependencies": {
