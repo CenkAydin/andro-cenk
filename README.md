@@ -1,61 +1,61 @@
-# Andromeda NFT Marketplace
+# Andromeda Creator Support Platform
 
-A full-featured NFT marketplace built on the Andromeda Protocol, enabling users to mint, trade, and manage NFTs with a modern, responsive interface.
+A decentralized platform that enables artists to monetize their work through NFTs while receiving direct support from their audience. Built on the Andromeda Protocol, this platform combines NFT ownership with a sustainable revenue model for creators.
 
 ## Project Description
 
-This NFT marketplace leverages the Andromeda Protocol to provide a seamless experience for creating, trading, and managing NFTs. Built with Next.js and TypeScript, it offers a robust platform for both creators and collectors, featuring IPFS integration for decentralized storage and a user-friendly interface powered by Chakra UI.
+This platform allows artists to mint their works as NFTs and receive support from their audience. Supporters can purchase these NFTs, gaining digital ownership and access to exclusive content, while also supporting the artist financially. The platform uses smart contracts to automatically handle revenue distribution and implement a time-locked release mechanism for artist payments.
 
 ## Key Features
 
-- **NFT Minting**
+- **Artist-Centric NFT Minting**
 
-  - Direct minting through CW721 contracts
-  - IPFS integration for decentralized image storage
-  - Custom metadata support
-  - Real-time transaction feedback
+  - Direct minting through CW721-ADO contracts
+  - IPFS integration for artwork storage
+  - Custom metadata support for artwork details
+  - Automatic revenue splitting between artist and platform
 
-- **User Dashboard**
+- **Revenue Management**
 
-  - View owned NFTs in a responsive grid layout
-  - Search functionality for quick NFT discovery
-  - Detailed NFT information display
-  - Transaction history
+  - Automatic 90/10 revenue split (artist/platform)
+  - Time-locked artist payments for sustainable income
+  - Transparent payment tracking
+  - Claimable funds dashboard
 
-- **Collection Management**
+- **Artist Dashboard**
 
-  - Collection detail pages
-  - NFT listing and management
-  - Collection metadata display
-  - Owner verification
+  - Sales analytics and revenue tracking
+  - Locked/unlocked funds overview
+  - NFT portfolio management
+  - Support metrics and audience insights
 
-- **Auction System**
+- **Public Gallery**
 
-  - Real-time auction interface
-  - Bid management
-  - Price tracking
-  - Auction status updates
+  - Curated artwork showcase
+  - Artist profiles and portfolios
+  - Featured creators section
+  - Search and filter capabilities
 
 - **User Experience**
   - Dark/Light mode toggle
   - Responsive design
-  - Toast notifications for user feedback
+  - Toast notifications for transactions
   - Loading states and error handling
 
 ## Additional Features
 
-- **IPFS Integration**
+- **Smart Contract Integration**
 
-  - Automatic image upload to IPFS
+  - CW721-ADO for NFT management
+  - Split-ADO for revenue distribution
+  - Timelock-ADO for payment scheduling
+  - Automated contract interactions
+
+- **IPFS Integration**
+  - Automatic artwork upload to IPFS
   - CID generation and management
   - Fallback image handling
   - Metadata storage
-
-- **Wallet Integration**
-  - Andromeda wallet support
-  - Transaction signing
-  - Balance checking
-  - Network status monitoring
 
 ## Project Setup
 
@@ -81,6 +81,9 @@ This NFT marketplace leverages the Andromeda Protocol to provide a seamless expe
    NEXT_PUBLIC_WEB3STORAGE_TOKEN=your_web3storage_token
    NEXT_PUBLIC_ANDROMEDA_RPC=your_andromeda_rpc_url
    NEXT_PUBLIC_ANDROMEDA_REST=your_andromeda_rest_url
+   NEXT_PUBLIC_PLATFORM_FEE_ADDRESS=your_platform_wallet_address
+   NEXT_PUBLIC_REVENUE_SPLIT_RATIO=90 # Percentage for artist
+   NEXT_PUBLIC_TIMELOCK_DURATION=2592000 # 30 days in seconds
    ```
 
 4. **Run Development Server**
@@ -105,17 +108,32 @@ This NFT marketplace leverages the Andromeda Protocol to provide a seamless expe
 - Web3.Storage account (for IPFS)
 - Andromeda testnet tokens
 
+## Smart Contract Architecture
+
+### Core ADOs
+
+- **CW721-ADO**: Handles NFT minting and ownership
+- **Split-ADO**: Manages revenue distribution between artist and platform
+- **Timelock-ADO**: Controls the release schedule of artist payments
+
+### Contract Flow
+
+1. Artist mints NFT using CW721-ADO
+2. Buyer purchases NFT
+3. Split-ADO automatically distributes funds (90% artist, 10% platform)
+4. Timelock-ADO locks artist's share for specified duration
+5. Artist can claim funds after lock period
+
 ## Future Scope
 
 ### Planned Features
 
 - Multi-wallet support (Keplr, Cosmostation)
-- Advanced search and filtering
-- Social features (likes, comments, sharing)
-- Analytics dashboard
-- Batch minting support
+- Advanced analytics for artists
+- Social features (comments, sharing)
+- Batch artwork upload
 - Royalty management
-- Collection verification system
+- Artist verification system
 
 ### Technical Improvements
 

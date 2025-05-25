@@ -1,23 +1,41 @@
 "use client";
 
-import Link from 'next/link';
-import { Box, Flex, HStack, Heading, Spacer, Button } from '@chakra-ui/react';
-import ColorModeToggle from './ColorModeToggle';
+import {
+  Box,
+  Container,
+  Flex,
+  Heading,
+  HStack,
+  Link,
+  Spacer,
+} from "@chakra-ui/react";
+import NextLink from "next/link";
+import WalletConnect from "./WalletConnect";
 
 export default function Header() {
-    return (
-        <Box as="header" bg="gray.900" color="white" px={6} py={4} boxShadow="sm">
-            <Flex align="center">
-                <Heading size="md">
-                    <Link href="/">NFT Marketplace</Link>
-                </Heading>
-                <Spacer />
-                <HStack spacing={4}>
-                    <Button as={Link} href="/mint" variant="ghost" colorScheme="purple">Mint</Button>
-                    <Button as={Link} href="/dashboard" variant="ghost" colorScheme="purple">Dashboard</Button>
-                    <ColorModeToggle />
-                </HStack>
-            </Flex>
-        </Box>
-    );
+  return (
+    <Box as="header" py={4} borderBottom="1px" borderColor="var(--border-color)">
+      <Container maxW="container.xl">
+        <Flex align="center">
+          <NextLink href="/" passHref>
+            <Link>
+              <Heading size="lg" className="text-serif">
+                ArtMecra
+              </Heading>
+            </Link>
+          </NextLink>
+          <Spacer />
+          <HStack spacing={8}>
+            <NextLink href="/gallery" passHref>
+              <Link>Gallery</Link>
+            </NextLink>
+            <NextLink href="/artist-dashboard" passHref>
+              <Link>Artist Studio</Link>
+            </NextLink>
+            <WalletConnect />
+          </HStack>
+        </Flex>
+      </Container>
+    </Box>
+  );
 } 

@@ -7,140 +7,208 @@ import {
   FormControl,
   FormLabel,
   Input,
+  Textarea,
   VStack,
   Heading,
   Text,
+  useToast,
   Container,
+  Image,
+  Progress,
 } from '@chakra-ui/react';
-import useAndromedaClient from '@/lib/andrjs/hooks/useAndromedaClient';
-import { useWallet } from '@/lib/wallet/hooks/useWallet';
-import { useToast as useCustomToast } from '../hooks/useToast';
-import { Web3Storage } from 'web3.storage';
+import { useCreatorSupport } from '../hooks/useCreatorSupport';
+import { useAndromedaClient } from '../hooks/useAndromedaClient';
+import { useWeb3Storage } from '../hooks/useWeb3Storage';
 
 export default function MintPage() {
-  const [tokenId, setTokenId] = useState('');
-  const [tokenUri, setTokenUri] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const client = useAndromedaClient();
-  const { address, isConnected } = useWallet();
-  const { showSuccess, showError } = useCustomToast();
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
-  const handleMint = async () => {
-    if (!isConnected) {
-      showError({
-        title: 'Wallet Not Connected',
-        description: 'Please connect your wallet to mint NFTs',
-      });
-      return;
-    }
+  const toast = useToast();
+  const { client } = useAndromedaClient();
+  const { uploadToIPFS } = useWeb3Storage();
+  const { mintArtwork, isLoading: isMinting } = useCreatorSupport(
+    process.env.NEXT_PUBLIC_CREATOR_SUPPORT_CONTRACT || ''
+  );
 
-    if (!tokenId || !tokenUri) {
-      showError({
-        title: 'Missing Information',
-        description: 'Please fill in all required fields',
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Replace with your actual contract address
-      const contractAddress = 'your_contract_address';
-      
-      const msg = {
-        mint: {
-          token_id: tokenId,
-          owner: address,
-          token_uri: tokenUri,
-          extension: {
-            publisher: address
-          }
-        }
-      };
-
-      const result = await client?.execute(contractAddress, msg, 'auto');
-      
-      showSuccess({
-        title: 'NFT Minted Successfully!',
-        description: `Transaction hash: ${result?.transactionHash}`,
-      });
-
-      // Clear form
-      setTokenId('');
-      setTokenUri('');
-    } catch (error) {
-      showError({
-        title: 'Minting Failed',
-        description: error instanceof Error ? error.message : 'An error occurred while minting',
-      });
-    } finally {
-      setIsLoading(false);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImage(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
     }
   };
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setUploading(true);
-    try {
-      const client = new Web3Storage({ token: process.env.NEXT_PUBLIC_WEB3STORAGE_TOKEN! });
-      const cid = await client.put([file]);
-      const url = `https://${cid}.ipfs.dweb.link/${file.name}`;
-      setTokenUri(url);
-      showSuccess({
-        title: 'Image uploaded to IPFS',
-        description: `IPFS CID: ${cid}`,
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!image || !name || !description) {
+      toast({
+        title: 'Missing Information',
+        description: 'Please fill in all fields and select an image.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
-    } catch (err) {
-      showError({
-        title: 'Failed to upload image to IPFS',
-        description: err instanceof Error ? err.message : 'An error occurred while uploading',
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      // Upload image to IPFS
+      const imageCid = await uploadToIPFS(image, (progress) => {
+        setUploadProgress(progress);
+      });
+
+      // Create metadata
+      const metadata = {
+        name,
+        description,
+        image: `ipfs://${imageCid}`,
+      };
+
+      // Upload metadata to IPFS
+      const metadataBlob = new Blob([JSON.stringify(metadata)], {
+        type: 'application/json',
+      });
+      const metadataCid = await uploadToIPFS(metadataBlob);
+
+      // Mint NFT
+      const tokenId = Date.now().toString();
+      const txHash = await mintArtwork({
+        token_id: tokenId,
+        owner: client?.getAddress() || '',
+        token_uri: `ipfs://${metadataCid}`,
+        extension: {
+          name,
+          description,
+          image: `ipfs://${imageCid}`,
+        },
+      });
+
+      toast({
+        title: 'Artwork Published Successfully!',
+        description: `Transaction Hash: ${txHash}`,
+        status: 'success',
+        duration: 10000,
+        isClosable: true,
+      });
+
+      // Reset form
+      setName('');
+      setDescription('');
+      setImage(null);
+      setPreviewUrl('');
+    } catch (error) {
+      toast({
+        title: 'Error Publishing Artwork',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
       });
     } finally {
-      setUploading(false);
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
   return (
-    <Container maxW="container.md" py={10}>
+    <Container maxW="container.md" py={8}>
       <VStack spacing={8} align="stretch">
-        <Box>
-          <Heading size="lg" mb={2}>Mint New NFT</Heading>
-          <Text color="gray.600">Create a new NFT in your collection</Text>
+        <Box textAlign="center">
+          <Heading size="xl" mb={2}>
+            Publish Your Artwork
+          </Heading>
+          <Text color="gray.600">
+            Share your creation with the world and receive support from your audience
+          </Text>
         </Box>
 
-        <VStack spacing={4} align="stretch">
-          <FormControl isRequired>
-            <FormLabel>Token ID</FormLabel>
-            <Input
-              value={tokenId}
-              onChange={(e) => setTokenId(e.target.value)}
-              placeholder="Enter unique token ID"
-            />
-          </FormControl>
+        <Box
+          as="form"
+          onSubmit={handleSubmit}
+          p={6}
+          borderWidth="1px"
+          borderRadius="lg"
+          bg="white"
+          _dark={{ bg: 'gray.700' }}
+        >
+          <VStack spacing={6}>
+            <FormControl isRequired>
+              <FormLabel>Artwork Name</FormLabel>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter a name for your artwork"
+              />
+            </FormControl>
 
-          <FormControl isRequired>
-            <FormLabel>Token URI</FormLabel>
-            <Input
-              value={tokenUri}
-              onChange={(e) => setTokenUri(e.target.value)}
-              placeholder="Enter token URI (IPFS hash or URL)"
-            />
-          </FormControl>
+            <FormControl isRequired>
+              <FormLabel>Description</FormLabel>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your artwork"
+                rows={4}
+              />
+            </FormControl>
 
-          <Button
-            colorScheme="purple"
-            onClick={handleMint}
-            isLoading={isLoading}
-            loadingText="Minting..."
-            isDisabled={!isConnected}
-          >
-            {isConnected ? 'Mint NFT' : 'Connect Wallet to Mint'}
-          </Button>
-        </VStack>
+            <FormControl isRequired>
+              <FormLabel>Artwork Image</FormLabel>
+              <Input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                p={1}
+              />
+              {previewUrl && (
+                <Box mt={4}>
+                  <Image
+                    src={previewUrl}
+                    alt="Preview"
+                    maxH="200px"
+                    mx="auto"
+                    borderRadius="md"
+                  />
+                </Box>
+              )}
+            </FormControl>
+
+            {(isUploading || isMinting) && (
+              <Box w="100%">
+                <Progress
+                  value={isUploading ? uploadProgress : 100}
+                  size="sm"
+                  colorScheme="purple"
+                  mb={2}
+                />
+                <Text textAlign="center" fontSize="sm" color="gray.500">
+                  {isUploading
+                    ? 'Uploading to IPFS...'
+                    : 'Publishing your artwork...'}
+                </Text>
+              </Box>
+            )}
+
+            <Button
+              type="submit"
+              colorScheme="purple"
+              size="lg"
+              w="100%"
+              isLoading={isUploading || isMinting}
+              loadingText={isUploading ? 'Uploading...' : 'Publishing...'}
+            >
+              Publish Artwork
+            </Button>
+          </VStack>
+        </Box>
       </VStack>
     </Container>
   );
