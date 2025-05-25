@@ -61,33 +61,46 @@ export const connectAndromedaClient = async (chainId?: string | null) => {
 
         console.log(chainId, "CHAIN ID");
 
-
         const keplr = state.keplr;
-
         if (!keplr) throw new Error("Keplr not instantiated yet");
 
         keplr.defaultOptions = {
-            // Use these fields to change keplr way of showing fee and memo. If you need your set fee to be
-            // Enabled by default, change value to true. Same for memo however user won't have option to override memo but
-            // they can override fee
             sign: {
-                // If there is gas fee error for a chain, do a conditional check here
                 preferNoSetFee: true,
-                // preferNoSetMemo: false
             }
         }
+
         try {
             await keplr.enable(chainId)
         } catch (err) {
-            const keplrConfig = await apolloClient.query<IKeplrConfigQuery>(refetchKeplrConfigQuery({
-                'identifier': chainId
-            }))
-            await keplr.experimentalSuggestChain(keplrConfig.data.keplrConfigs.config);
+            console.log("Failed to enable chain, attempting to suggest chain...");
+            try {
+                const keplrConfig = await apolloClient.query<IKeplrConfigQuery>(refetchKeplrConfigQuery({
+                    'identifier': chainId
+                }))
+                await keplr.experimentalSuggestChain(keplrConfig.data.keplrConfigs.config);
+                await keplr.enable(chainId);
+            } catch (suggestErr) {
+                console.error("Failed to suggest chain:", suggestErr);
+                throw new Error("Failed to configure chain in Keplr");
+            }
         }
 
-        const config = (await apolloClient.query<IChainConfigQuery>(refetchChainConfigQuery({
-            'identifier': chainId
-        }))).data.chainConfigs.config
+        let config;
+        try {
+            const chainConfigResponse = await apolloClient.query<IChainConfigQuery>(refetchChainConfigQuery({
+                'identifier': chainId
+            }));
+            config = chainConfigResponse.data.chainConfigs.config;
+        } catch (configErr) {
+            console.error("Failed to fetch chain config:", configErr);
+            throw new Error("Failed to fetch chain configuration");
+        }
+
+        if (!config) {
+            throw new Error("Chain configuration not found");
+        }
+
         const signer = await keplr.getOfflineSignerAuto(config.chainId);
         const accounts = await signer.getAccounts();
 
@@ -111,8 +124,13 @@ export const connectAndromedaClient = async (chainId?: string | null) => {
             client: client
         })
     } catch (err) {
-        useAndromedaStore.setState({ isLoading: false })
-        throw err
+        console.error("Failed to connect Andromeda client:", err);
+        useAndromedaStore.setState({ 
+            isLoading: false,
+            keplrStatus: KeplrConnectionStatus.NotInstalled,
+            isConnected: false
+        });
+        throw err;
     }
 }
 

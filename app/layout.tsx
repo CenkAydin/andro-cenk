@@ -1,31 +1,23 @@
-import React, { FC, ReactNode } from "react"
-import Providers from "./providers";
 import { Metadata } from "next";
-
+import ClientLayout from "./components/ClientLayout";
 
 export const metadata: Metadata = {
-    title: {
-        default: "Andromeda Embeddable",
-        template: "%s | Embeddable"
-    },
+    title: "CanvasPatron - NFT Marketplace",
+    description: "Support artists and collect NFTs on CanvasPatron",
 }
 
-interface Props {
-    children?: ReactNode;
-}
-
-const RootLayout = async (props: Props) => {
-    const { children } = props;
-
+export default function RootLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
     return (
         <html lang="en">
             <body>
-                <Providers>
+                <ClientLayout>
                     {children}
-                </Providers>
+                </ClientLayout>
             </body>
         </html>
-    )
+    );
 }
-
-export default RootLayout

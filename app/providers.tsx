@@ -1,4 +1,5 @@
 "use client"
+
 import { apolloClient } from "@/lib/graphql";
 import reactQueryClient from "@/lib/react-query/client";
 import { GlobalModalProvider } from "@/modules/modals";
@@ -14,12 +15,10 @@ interface Props {
     children?: ReactNode;
 }
 
-const Providers: FC<Props> = (props) => {
-    const { children } = props;
-
+export const Providers: FC<Props> = ({ children }) => {
     return (
-        <QueryClientProvider client={reactQueryClient}>
-            <ApolloProvider client={apolloClient}>
+        <ApolloProvider client={apolloClient}>
+            <QueryClientProvider client={reactQueryClient}>
                 <CacheProvider>
                     <ChakraProvider theme={theme} colorModeManager={ThemeStorageManager}>
                         <GlobalModalProvider>
@@ -27,8 +26,8 @@ const Providers: FC<Props> = (props) => {
                         </GlobalModalProvider>
                     </ChakraProvider>
                 </CacheProvider>
-            </ApolloProvider>
-        </QueryClientProvider>
+            </QueryClientProvider>
+        </ApolloProvider>
     )
 }
 

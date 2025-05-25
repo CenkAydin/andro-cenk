@@ -1,16 +1,35 @@
 import { StrictTypedTypePolicies, TypedFieldPolicy } from "@andromedaprotocol/gql";
-import { ApolloClient, InMemoryCache } from "@apollo/client";
+import { ApolloClient, InMemoryCache, from, HttpLink } from "@apollo/client";
+import { onError } from "@apollo/client/link/error";
 
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+  if (graphQLErrors)
+    graphQLErrors.forEach(({ message, locations, path }) =>
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`
+      )
+    );
+  if (networkError) console.error(`[Network error]: ${networkError}`);
+});
+
+const httpLink = new HttpLink({
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
+});
 
 /**
  * Apollo client used for queries, may require some state usage later
  */
 export const apolloClient = new ApolloClient({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT,
-  'defaultOptions': {
-    'query': {
-      'notifyOnNetworkStatusChange': true,
-      'fetchPolicy': 'cache-first'
+  link: from([errorLink, httpLink]),
+  defaultOptions: {
+    query: {
+      notifyOnNetworkStatusChange: true,
+      fetchPolicy: 'cache-first',
+      errorPolicy: 'all'
+    },
+    watchQuery: {
+      fetchPolicy: 'cache-and-network',
+      errorPolicy: 'all'
     }
   },
   ssrMode: true,
